@@ -3,6 +3,7 @@ package com.mini.project.financial_tracker.service;
 import com.mini.project.financial_tracker.dto.response.SummaryResponse;
 import com.mini.project.financial_tracker.entity.CategoryType;
 import com.mini.project.financial_tracker.entity.User;
+import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
@@ -21,20 +22,15 @@ public class SummaryService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "summary", key = "#result.id")
+    @Cacheable(value = "summary", key = "#root.methodName + '_' + T(com.mini.project.financial_tracker.utils.SecurityUtils).getCurrentUsername()")
     public SummaryResponse getSummary() {
          String username = SecurityUtils.getCurrentUsername();
          User user = userRepository.findByEmail(username)
-                 .orElseThrow(() -> new RuntimeException("User not found"));
+                 .orElseThrow(() -> new NotFoundException("User not found"));
          
-         return getSummaryForUser(user.getId());
-    }
-
-    @Cacheable(value = "summary", key = "#userId")
-    public SummaryResponse getSummaryForUser(java.util.UUID userId) {
-        log.info("Calculating summary for user: {}", userId);
-        Double totalIncome = transactionRepository.sumAmountByUserIdAndCategoryType(userId, CategoryType.INCOME);
-        Double totalExpense = transactionRepository.sumAmountByUserIdAndCategoryType(userId, CategoryType.EXPENSE);
+        log.info("Calculating summary for user: {}", user.getId());
+        Double totalIncome = transactionRepository.sumAmountByUserIdAndCategoryType(user.getId(), CategoryType.INCOME);
+        Double totalExpense = transactionRepository.sumAmountByUserIdAndCategoryType(user.getId(), CategoryType.EXPENSE);
 
         if (totalIncome == null) totalIncome = 0.0;
         if (totalExpense == null) totalExpense = 0.0;

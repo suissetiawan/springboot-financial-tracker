@@ -32,7 +32,7 @@ public class TransactionService {
     private final UserRepository userRepository;
 
     @Transactional
-    @CacheEvict(value = "transactions", allEntries = true)
+    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
     public TransactionResponse createTransaction(TransactionRequest request) {
         String username = SecurityUtils.getCurrentUsername();
         User user = userRepository.findByEmail(username)
@@ -83,7 +83,7 @@ public class TransactionService {
     }
 
     @Transactional
-    @CacheEvict(value = "transactions", allEntries = true)
+    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
     public TransactionResponse updateTransaction(UUID id, TransactionRequest request) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
@@ -108,7 +108,7 @@ public class TransactionService {
     }
 
     @Transactional
-    @CacheEvict(value = "transactions", allEntries = true)
+    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
     public void deleteTransaction(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
