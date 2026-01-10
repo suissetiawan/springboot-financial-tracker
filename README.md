@@ -7,7 +7,7 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 - **User Authentication**: Register, Login, Logout, Refresh Token (JWT).
 - **Transactions**: Create, Read, Update, Delete transactions (Income/Expense).
 - **Categories**: Organize transactions by categories.
-- **Summary**: Real-time financial summary with caching (Redis).
+- **Summary**: Financial summary with caching (Redis).
 - **Users Management**: Admin-only access to view user lists and details.
 - **Security**: Role-based access control, secure password storage, and custom error handling.
 
