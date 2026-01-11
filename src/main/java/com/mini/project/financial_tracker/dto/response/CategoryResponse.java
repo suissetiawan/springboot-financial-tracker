@@ -1,9 +1,10 @@
 package com.mini.project.financial_tracker.dto.response;
 
-import com.mini.project.financial_tracker.entity.CategoryType;
 import lombok.Builder;
 import lombok.Data;
 import java.util.UUID;
+
+import com.mini.project.financial_tracker.utils.enums.CategoryType;
 
 import java.io.Serializable;
 

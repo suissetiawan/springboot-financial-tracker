@@ -92,13 +92,10 @@ _Tujuan: Mendemokan alur penggunaan aplikasi oleh user biasa._
   ```json
   {
     "amount": 5000000,
-    "type": "INCOME",
     "description": "Gaji Bulan Januari",
-    "categoryId": 1,
-    "date": "2024-01-25"
+    "category": "Gaji"
   }
   ```
-  _(Pastikan categoryId sesuai dengan ID kategori "Gaji" yang dibuat Admin)_
 
 ### 4. Add Expense (Pengeluaran)
 
@@ -108,10 +105,8 @@ _Tujuan: Mendemokan alur penggunaan aplikasi oleh user biasa._
   ```json
   {
     "amount": 50000,
-    "type": "EXPENSE",
     "description": "Makan Siang",
-    "categoryId": 2,
-    "date": "2024-01-26"
+    "category": "Makanan"
   }
   ```
 

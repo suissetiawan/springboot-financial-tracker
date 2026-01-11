@@ -10,6 +10,7 @@ import com.mini.project.financial_tracker.repository.CategoryRepository;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
+import com.mini.project.financial_tracker.utils.CacheConstants;
 
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import org.springframework.security.access.AccessDeniedException;
-import java.time.LocalDateTime;
 
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class TransactionService {
     private final UserRepository userRepository;
 
     @Transactional
-    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
+    @CacheEvict(value = {CacheConstants.TRANSACTIONS, CacheConstants.SUMMARY}, allEntries = true)
     public TransactionResponse createTransaction(TransactionRequest request) {
         String username = SecurityUtils.getCurrentUsername();
         User user = userRepository.findByEmail(username)
@@ -48,7 +48,6 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setAmount(request.getAmount());
         transaction.setDescription(request.getDescription());
-        transaction.setUpdatedAt(LocalDateTime.now());
         transaction.setCategory(category);
         transaction.setUser(user);
 
@@ -59,13 +58,13 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "transactions", key = "#username")
+    @Cacheable(value = CacheConstants.TRANSACTIONS, key = "#username")
     public List<TransactionResponse> getAllTransactions(String username) {
         User user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         log.info("Fetching transactions for user: {}", username);
-        List<Transaction> transactions = transactionRepository.findAllByUser(user);
+        List<Transaction> transactions = transactionRepository.findAllByUserWithCategory(user);
 
         return transactions.stream()
                 .map(this::mapToResponse)
@@ -73,7 +72,7 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "transactions", key = "#id")
+    @Cacheable(value = CacheConstants.TRANSACTIONS, key = "#id")
     public TransactionDetailResponse getTransactionById(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
@@ -88,7 +87,7 @@ public class TransactionService {
     }
 
     @Transactional
-    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
+    @CacheEvict(value = {CacheConstants.TRANSACTIONS, CacheConstants.SUMMARY}, allEntries = true)
     public TransactionResponse updateTransaction(UUID id, TransactionRequest request) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
@@ -112,7 +111,7 @@ public class TransactionService {
     }
 
     @Transactional
-    @CacheEvict(value = {"transactions", "summary"}, allEntries = true)
+    @CacheEvict(value = {CacheConstants.TRANSACTIONS, CacheConstants.SUMMARY}, allEntries = true)
     public void deleteTransaction(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)

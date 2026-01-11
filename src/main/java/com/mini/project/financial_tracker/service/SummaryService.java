@@ -1,12 +1,13 @@
 package com.mini.project.financial_tracker.service;
 
 import com.mini.project.financial_tracker.dto.response.SummaryResponse;
-import com.mini.project.financial_tracker.entity.CategoryType;
 import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
+import com.mini.project.financial_tracker.utils.enums.CategoryType;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;

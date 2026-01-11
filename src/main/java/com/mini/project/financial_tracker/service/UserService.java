@@ -2,11 +2,11 @@ package com.mini.project.financial_tracker.service;
 
 import com.mini.project.financial_tracker.dto.response.UserResponse;
 import com.mini.project.financial_tracker.entity.User;
-import com.mini.project.financial_tracker.entity.Role;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
+import com.mini.project.financial_tracker.utils.enums.Role;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -29,7 +29,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "users", key = "#root.methodName")
+    @Cacheable(value = "users", key = "#id")
     public UserResponse getUserById(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
 

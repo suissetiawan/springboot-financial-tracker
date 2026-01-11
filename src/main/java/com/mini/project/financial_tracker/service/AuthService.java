@@ -7,13 +7,13 @@ import com.mini.project.financial_tracker.dto.response.AuthResponse;
 import com.mini.project.financial_tracker.dto.response.MessageResponse;
 import com.mini.project.financial_tracker.dto.response.DataResponse;
 import com.mini.project.financial_tracker.entity.RefreshToken;
-import com.mini.project.financial_tracker.entity.Role;
 import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.JwtUtils;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
+import com.mini.project.financial_tracker.utils.enums.Role;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
