@@ -4,6 +4,7 @@ import com.mini.project.financial_tracker.dto.request.TransactionRequest;
 import com.mini.project.financial_tracker.dto.response.DataResponse;
 import com.mini.project.financial_tracker.dto.response.MessageResponse;
 import com.mini.project.financial_tracker.dto.response.TransactionResponse;
+import com.mini.project.financial_tracker.dto.response.TransactionDetailResponse;
 import com.mini.project.financial_tracker.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,13 +29,14 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<DataResponse<List<TransactionResponse>>> getAllTransactions() {
-        List<TransactionResponse> response = transactionService.getAllTransactions();
+        String username = com.mini.project.financial_tracker.utils.SecurityUtils.getCurrentUsername();
+        List<TransactionResponse> response = transactionService.getAllTransactions(username);
         return ResponseEntity.ok(new DataResponse<>(200, "Transactions retrieved successfully", response));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DataResponse<TransactionResponse>> getTransactionById(@PathVariable UUID id) {
-        TransactionResponse response = transactionService.getTransactionById(id);
+    public ResponseEntity<DataResponse<TransactionDetailResponse>> getTransactionById(@PathVariable UUID id) {
+        TransactionDetailResponse response = transactionService.getTransactionById(id);
         return ResponseEntity.ok(new DataResponse<>(200, "Transaction retrieved successfully", response));
     }
 

@@ -19,7 +19,7 @@ public class Transaction {
 
     private Double amount;
     private String description;
-    private LocalDateTime date;
+    private LocalDateTime updatedAt;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)

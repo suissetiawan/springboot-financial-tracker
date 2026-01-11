@@ -130,7 +130,7 @@ public class AuthService {
 
         // Validate refresh token
         if (!jwtUtil.validateRefreshToken(request.getRefreshToken())) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new BadRequestException("Invalid refresh token");
         }
 
         String jti = jwtUtil.extractJtiFromRefreshToken(request.getRefreshToken());
@@ -138,21 +138,21 @@ public class AuthService {
 
         // Check refresh token di redis
         RefreshToken storedToken = refreshTokenRepository.findById(jti)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+                .orElseThrow(() -> new NotFoundException("Refresh token not found"));
 
         // Check user id di redis
         if (!storedToken.getUserId().equals(userId)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new BadRequestException("Invalid refresh token");
         }
 
         // Check refresh token di redis
         if (!storedToken.getRefreshToken().equals(request.getRefreshToken())) {
-            throw new RuntimeException("Refresh token mismatch");
+            throw new BadRequestException("Refresh token mismatch");
         }
 
         // Ambil data user
         User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         // Hapus refresh token di redis
         refreshTokenRepository.deleteById(jti);

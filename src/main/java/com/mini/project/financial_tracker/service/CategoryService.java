@@ -5,6 +5,8 @@ import com.mini.project.financial_tracker.dto.response.CategoryResponse;
 import com.mini.project.financial_tracker.entity.Category;
 import com.mini.project.financial_tracker.repository.CategoryRepository;
 import com.mini.project.financial_tracker.exception.BadRequestException;
+import com.mini.project.financial_tracker.exception.NotFoundException;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -54,7 +56,7 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse updateCategory(UUID id, CategoryRequest request) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         category.setName(request.getName());
         category.setType(request.getType());
@@ -69,7 +71,7 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         categoryRepository.delete(category);
         log.info("Deleted category: {}", id);

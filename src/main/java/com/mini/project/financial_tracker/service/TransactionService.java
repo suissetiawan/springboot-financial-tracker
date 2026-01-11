@@ -1,6 +1,7 @@
 package com.mini.project.financial_tracker.service;
 
 import com.mini.project.financial_tracker.dto.request.TransactionRequest;
+import com.mini.project.financial_tracker.dto.response.TransactionDetailResponse;
 import com.mini.project.financial_tracker.dto.response.TransactionResponse;
 import com.mini.project.financial_tracker.entity.Category;
 import com.mini.project.financial_tracker.entity.Transaction;
@@ -9,12 +10,15 @@ import com.mini.project.financial_tracker.repository.CategoryRepository;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.utils.SecurityUtils;
+
+import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.cache.annotation.CacheEvict;
 import com.mini.project.financial_tracker.exception.NotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 
 
@@ -44,7 +48,7 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setAmount(request.getAmount());
         transaction.setDescription(request.getDescription());
-        transaction.setDate(LocalDateTime.now());
+        transaction.setUpdatedAt(LocalDateTime.now());
         transaction.setCategory(category);
         transaction.setUser(user);
 
@@ -55,10 +59,10 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponse> getAllTransactions() {
-        String username = SecurityUtils.getCurrentUsername();
+    @Cacheable(value = "transactions", key = "#username")
+    public List<TransactionResponse> getAllTransactions(String username) {
         User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         log.info("Fetching transactions for user: {}", username);
         List<Transaction> transactions = transactionRepository.findAllByUser(user);
@@ -69,17 +73,18 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public TransactionResponse getTransactionById(UUID id) {
+    @Cacheable(value = "transactions", key = "#id")
+    public TransactionDetailResponse getTransactionById(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
         if (!transaction.getUser().getEmail().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         
         log.info("Fetching transaction detail: {}", id);
-        return mapToResponse(transaction);
+        return mapToDetailResponse(transaction);
     }
 
     @Transactional
@@ -87,18 +92,17 @@ public class TransactionService {
     public TransactionResponse updateTransaction(UUID id, TransactionRequest request) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
         if (!transaction.getUser().getEmail().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         Category category = categoryRepository.findByName(request.getCategory())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         transaction.setAmount(request.getAmount());
         transaction.setDescription(request.getDescription());
-        // transaction.setDate(request.getDate()); // Date is not in request
         transaction.setCategory(category);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
@@ -112,10 +116,10 @@ public class TransactionService {
     public void deleteTransaction(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
         Transaction transaction = transactionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+                .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
         if (!transaction.getUser().getEmail().equals(username)) {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         transactionRepository.delete(transaction);
@@ -127,7 +131,17 @@ public class TransactionService {
                 .id(transaction.getId())
                 .amount(transaction.getAmount())
                 .description(transaction.getDescription())
-                .date(transaction.getDate())
+                .categoryName(transaction.getCategory().getName())
+                .categoryType(String.valueOf(transaction.getCategory().getType()))
+                .build();
+    }
+
+    private TransactionDetailResponse mapToDetailResponse(Transaction transaction) {
+        return TransactionDetailResponse.builder()
+                .id(transaction.getId())
+                .amount(transaction.getAmount())
+                .description(transaction.getDescription())
+                .updatedAt(transaction.getUpdatedAt())
                 .categoryName(transaction.getCategory().getName())
                 .categoryType(String.valueOf(transaction.getCategory().getType()))
                 .userId(transaction.getUser().getId())

@@ -24,7 +24,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         MessageResponse<String> errorResponse = new MessageResponse<>(
                 HttpServletResponse.SC_UNAUTHORIZED,
-                authException.getMessage() // unauthorized
+                "Unauthorized: Login required" // unauthorized
         );
 
         objectMapper.writeValue(response.getOutputStream(), errorResponse);
