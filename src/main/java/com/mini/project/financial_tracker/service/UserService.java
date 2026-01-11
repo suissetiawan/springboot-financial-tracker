@@ -29,6 +29,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "users", key = "#root.methodName")
     public UserResponse getUserById(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
 
