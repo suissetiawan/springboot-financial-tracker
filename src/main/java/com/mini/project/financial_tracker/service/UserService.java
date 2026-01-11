@@ -2,6 +2,7 @@ package com.mini.project.financial_tracker.service;
 
 import com.mini.project.financial_tracker.dto.response.UserResponse;
 import com.mini.project.financial_tracker.entity.User;
+import com.mini.project.financial_tracker.entity.Role;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.UserRepository;
@@ -31,14 +32,17 @@ public class UserService {
     public UserResponse getUserById(UUID id) {
         String username = SecurityUtils.getCurrentUsername();
 
-        User user = userRepository.findById(id)
+        User currentUser = userRepository.findByEmail(username)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        if (!user.getEmail().equals(username)) {
+        User targetUser = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (!targetUser.getEmail().equals(username) && !currentUser.getRole().equals(Role.ADMIN)) {
             throw new BadRequestException("Access denied");
         }
 
-        return mapToResponse(user);
+        return mapToResponse(targetUser);
     }
 
     private UserResponse mapToResponse(User user) {

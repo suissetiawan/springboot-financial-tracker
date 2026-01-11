@@ -8,7 +8,7 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 - **Transactions**: Create, Read, Update, Delete transactions (Income/Expense) with caching (Redis).
 - **Categories**: Organize transactions by categories (Redis).
 - **Summary**: Financial summary with caching (Redis).
-- **Users Management**: Admin-only access to view user lists and details.
+- **Users Management**: Admin-only access to view user lists and Admin or Self details.
 - **Security**: Role-based access control, secure password storage, and custom error handling.
 
 ## Tech Stack
@@ -50,7 +50,7 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 ### Users (Admin Only)
 
 - `GET /api/users`: Get list of all users.
-- `GET /api/users/{id}`: Get details of a specific user.
+- `GET /api/users/{id}`: Get details of a specific user (Admin or Self).
 
 ### Summary
 
@@ -95,6 +95,9 @@ Open `src/main/resources/application.properties` and update the following values
   ```properties
   jwt.secret=your_super_secret_key_here
   jwt.refresh.secret=your_super_secret_refresh_key_here
+  # Expiration time in seconds
+  jwt.expiration=1800
+  jwt.refresh.expiration=3600
   ```
 
 - **Redis** (If running on a different host/port):
