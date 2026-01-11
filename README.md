@@ -5,8 +5,8 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 ## Features
 
 - **User Authentication**: Register, Login, Logout, Refresh Token (JWT).
-- **Transactions**: Create, Read, Update, Delete transactions (Income/Expense).
-- **Categories**: Organize transactions by categories.
+- **Transactions**: Create, Read, Update, Delete transactions (Income/Expense) with caching (Redis).
+- **Categories**: Organize transactions by categories (Redis).
 - **Summary**: Financial summary with caching (Redis).
 - **Users Management**: Admin-only access to view user lists and details.
 - **Security**: Role-based access control, secure password storage, and custom error handling.
@@ -35,14 +35,14 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 ### Transactions
 
 - `POST /api/transactions`: Create a transaction.
-- `GET /api/transactions`: Get all transactions for the logged-in user.
+- `GET /api/transactions`: Get all transactions for the logged-in user (Redis Cache).
 - `GET /api/transactions/{id}`: Get a specific transaction.
 - `PUT /api/transactions/{id}`: Update a transaction.
 - `DELETE /api/transactions/{id}`: Delete a transaction.
 
 ### Categories (User read only, managed by admin)
 
-- `GET /api/categories`: List all categories.
+- `GET /api/categories`: List all categories (Redis).
 - `POST /api/categories`: Create a new category.
 - `PUT /api/categories/{id}`: Update a category.
 - `DELETE /api/categories/{id}`: Delete a category.
@@ -54,7 +54,7 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 
 ### Summary
 
-- `GET /api/summary`: Get total income, total expense, and current balance.
+- `GET /api/summary`: Get total income, total expense, and current balance (Redis).
 
 ## Setup & Run
 
@@ -122,7 +122,8 @@ The API returns standard JSON error responses:
 }
 ```
 
-- **401 Unauthorized**: Invalid or missing token.
+- **401 Unauthorized**: Invalid or missing token / Login required.
 - **403 Forbidden**: Access denied.
-- **404 Not Found**: Resource not found.
-- **400 Bad Request**: Validation error.
+- **404 Not Found**: Resource not found (User, Transaction, Category).
+- **400 Bad Request**: Validation error
+- **500 Internal Server Error**: Server error.
