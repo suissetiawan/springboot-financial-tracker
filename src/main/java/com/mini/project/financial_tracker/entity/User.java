@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 
+import com.mini.project.financial_tracker.utils.enums.Role;
+
 @Entity
 @Table(name = "users")
 @Getter

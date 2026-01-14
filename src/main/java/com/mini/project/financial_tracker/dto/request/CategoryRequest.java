@@ -1,11 +1,12 @@
 package com.mini.project.financial_tracker.dto.request;
 
-import com.mini.project.financial_tracker.entity.CategoryType;
 import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
+
+import com.mini.project.financial_tracker.utils.enums.CategoryType;
 
 @Data
 public class CategoryRequest implements Serializable {

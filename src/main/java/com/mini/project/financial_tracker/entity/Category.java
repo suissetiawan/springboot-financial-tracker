@@ -1,15 +1,17 @@
 package com.mini.project.financial_tracker.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+import java.time.LocalDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.mini.project.financial_tracker.utils.enums.CategoryType;
 
 @Entity
 @Table(name = "categories")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class Category {
 
     @Id
@@ -20,5 +22,12 @@ public class Category {
 
     @Enumerated(EnumType.STRING)
     private CategoryType type;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
 }
