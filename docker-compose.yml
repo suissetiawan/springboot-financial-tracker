@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    container_name: financial-tracker-be
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILE_ACTIVE=${SPRING_PROFILE_ACTIVE}
+    restart: unless-stopped

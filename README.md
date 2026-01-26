@@ -130,3 +130,35 @@ The API returns standard JSON error responses:
 - **404 Not Found**: Resource not found (User, Transaction, Category).
 - **400 Bad Request**: Validation error
 - **500 Internal Server Error**: Server error.
+
+## Menjalankan dengan Docker
+
+Proyek ini sudah dilengkapi dengan konfigurasi Docker dan Docker Compose. Karena Anda menggunakan database dan Redis eksternal (container lain), pastikan layanan tersebut sudah berjalan.
+
+### Prasyarat
+
+- Docker Desktop atau Docker Engine
+- Docker Compose
+- Container MySQL & Redis yang sudah berjalan
+
+### Langkah-langkah
+
+1. Pastikan Anda berada di direktori root proyek.
+2. Sesuaikan variabel lingkungan (`DB_HOST`, `REDIS_HOST`, dll.) agar mengarah ke container eksternal Anda. Anda bisa mengaturnya di file `.env` atau langsung di `docker-compose.yml`.
+3. Jalankan perintah berikut:
+   ```bash
+   docker compose up -d --build
+   ```
+4. Aplikasi akan tersedia di `http://localhost:8080`.
+5. Untuk melihat log:
+   ```bash
+   docker compose logs -f app
+   ```
+6. Untuk menghentikan layanan:
+   ```bash
+   docker compose down
+   ```
+
+## Variabel Lingkungan
+
+Anda dapat menyesuaikan konfigurasi melalui file `.env` atau variabel lingkungan di `docker-compose.yml`.
