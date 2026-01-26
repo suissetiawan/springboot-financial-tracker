@@ -3,7 +3,7 @@ name: Build & Push Docker Image to Docker Hub
 on:
   push:
     branches:
-      - main-docker
+      - main
 
 jobs:
   build-and-push:
@@ -34,4 +34,4 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/financial-tracker:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/financial-tracker-be:latest
