@@ -1,4 +1,4 @@
-package com.mini.project.financial_tracker.utils;
+package com.mini.project.financial_tracker.util.constant;
 
 public class CacheConstants {
     public static final String TRANSACTIONS = "transactions";

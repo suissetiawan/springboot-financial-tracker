@@ -5,8 +5,8 @@ import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
-import com.mini.project.financial_tracker.utils.SecurityUtils;
-import com.mini.project.financial_tracker.utils.enums.CategoryType;
+import com.mini.project.financial_tracker.util.enums.CategoryType;
+import com.mini.project.financial_tracker.util.helper.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class SummaryService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "summary", key = "#root.methodName + '_' + T(com.mini.project.financial_tracker.utils.SecurityUtils).getCurrentUsername()")
+    @Cacheable(value = "summary", key = "#root.methodName + '_' + T(com.mini.project.financial_tracker.util.helper.SecurityUtils).getCurrentUsername()")
     public SummaryResponse getSummary() {
          String username = SecurityUtils.getCurrentUsername();
          User user = userRepository.findByEmail(username)

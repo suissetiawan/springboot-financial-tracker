@@ -1,4 +1,4 @@
-package com.mini.project.financial_tracker.utils;
+package com.mini.project.financial_tracker.util.helper;
 
 import java.util.*;
 
@@ -88,8 +88,12 @@ public class JwtUtils {
     }
 
     public boolean validateAccessToken(String token, User user) {
-        final String userId = extractUserIdFromAccessToken(token);
-        return userId != null && !isAccessTokenExpired(token) && userId.equals(user.getId().toString());
+        try {
+            final String userId = extractUserIdFromAccessToken(token);
+            return userId != null && !isAccessTokenExpired(token) && userId.equals(user.getId().toString());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // --------- REFRESH TOKEN ---------
@@ -106,7 +110,11 @@ public class JwtUtils {
     }
 
     public boolean validateRefreshToken(String token) {
-        final String userId = extractUserIdFromRefreshToken(token);
-        return userId != null && !isRefreshTokenExpired(token);
+        try {
+            final String userId = extractUserIdFromRefreshToken(token);
+            return userId != null && !isRefreshTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

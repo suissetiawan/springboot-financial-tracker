@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import java.util.UUID;
 
-import com.mini.project.financial_tracker.utils.enums.CategoryType;
+import com.mini.project.financial_tracker.util.enums.CategoryType;
 
 import java.io.Serializable;
 

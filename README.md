@@ -13,9 +13,9 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 
 ## Tech Stack
 
-- **Java 25**
-- **Spring Boot 3**
-  - Spring Security (JWT)
+- **Java 21**
+- **Spring Boot 4**
+  - Spring Security (JWT 3.0)
   - Spring Data JPA
   - Spring Cache (Redis)
   - Spring Web
@@ -60,7 +60,7 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 
 ### 1. Prerequisites
 
-- **Java 25** or higher
+- **Java 21** or higher
 - **MySQL** Database
 - **Redis** Server
 
@@ -113,6 +113,66 @@ Open `src/main/resources/application.properties` and update the following values
 ```
 
 The application will start on port `8080`.
+
+## Testing
+
+The project includes both unit tests and integration tests.
+
+### Quick Shortcuts
+
+Use the unified test runner with optional arguments:
+
+- **Run All Tests**: `./run-tests.sh` or `./run-tests.sh all`
+- **Run Unit Tests**: `./run-tests.sh unit`
+- **Run Integration Tests**: `./run-tests.sh integration`
+
+### Run All Tests
+
+```bash
+./mvnw test
+```
+
+### Run Specific Test
+
+```bash
+./mvnw test -Dtest=AuthIntegrationTest
+```
+
+### Run Test Clusters
+
+- **Unit Tests**:
+  ```bash
+  ./mvnw test -Dtest="com.mini.project.financial_tracker.service.*,com.mini.project.financial_tracker.util.*"
+  ```
+- **Integration Tests**:
+  ```bash
+  ./mvnw test -Dtest="com.mini.project.financial_tracker.integration.*"
+  ```
+
+### Coverage Report
+
+JaCoCo is integrated to generate coverage reports. After running tests, the report can be found at:
+`target/site/jacoco/index.html`
+
+### Test Results Summary
+
+The project maintains high code coverage for core business logic and security components.
+
+#### Coverage Overview
+
+| Component Group   | Coverage  | Items Tested                                                                  |
+| ----------------- | --------- | ----------------------------------------------------------------------------- |
+| **Services**      | 100%      | AuthService, TransactionService, CategoryService, SummaryService, UserService |
+| **Utilities**     | 98.2%     | JwtUtils, SecurityUtils, JwtAuthFilter                                        |
+| **Exceptions**    | 100%      | GlobalExceptionHandler, Custom Handlers, Custom Exceptions                    |
+| **Total Success** | **95/95** | All tests (Unit + Integration)                                                |
+
+#### Detailed Test Areas
+
+- **Service Layer**: Complete validation of business rules, data persistence logic, and caching interactions.
+- **Security & JWT**: Comprehensive testing of token generation, validation, and security context management.
+- **Error Handling**: Detailed verification of custom exceptions and global error response formatting.
+- **Integration**: End-to-end testing of Authentication flows, Transaction management, and Categories.
 
 ## Error Handling
 

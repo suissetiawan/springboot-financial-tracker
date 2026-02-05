@@ -1,4 +1,4 @@
-package com.mini.project.financial_tracker.utils; 
+package com.mini.project.financial_tracker.util.helper; 
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

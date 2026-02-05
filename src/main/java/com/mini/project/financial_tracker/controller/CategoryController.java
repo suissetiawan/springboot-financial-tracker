@@ -2,7 +2,6 @@ package com.mini.project.financial_tracker.controller;
 
 import com.mini.project.financial_tracker.dto.request.CategoryRequest;
 import com.mini.project.financial_tracker.dto.response.DataResponse;
-import com.mini.project.financial_tracker.dto.response.MessageResponse;
 import com.mini.project.financial_tracker.dto.response.CategoryResponse;
 import com.mini.project.financial_tracker.service.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -49,9 +48,8 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MessageResponse<String>> deleteCategory(@PathVariable UUID id) {
+    public ResponseEntity<HttpStatus> deleteCategory(@PathVariable UUID id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok(new MessageResponse<>(
-            HttpStatus.OK.value(), "success delete category"));
+        return ResponseEntity.noContent().build();
     }
 }

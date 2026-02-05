@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.io.Serializable;
 
-import com.mini.project.financial_tracker.utils.enums.CategoryType;
+import com.mini.project.financial_tracker.util.enums.CategoryType;
 
 @Data
 public class CategoryRequest implements Serializable {

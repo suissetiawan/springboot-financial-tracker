@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.mini.project.financial_tracker.entity.Transaction;
 import com.mini.project.financial_tracker.entity.User;
-import com.mini.project.financial_tracker.utils.enums.CategoryType;
+import com.mini.project.financial_tracker.util.enums.CategoryType;
 
 public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
     List<Transaction> findAllByUser(User user);

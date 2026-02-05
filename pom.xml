@@ -154,7 +154,40 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- JaCoCo: untuk generate coverage report -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+
+					<!-- attach JaCoCo agent sebelum test dijalankan -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+
+					<!-- generate report setelah test selesai -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<excludes>
+						<exclude>**/*com/mini/project/financial_tracker/config/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/dto/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/entity/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/util/constant/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/util/enums/**</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
 </project>

@@ -2,11 +2,12 @@ package com.mini.project.financial_tracker.controller;
 
 import com.mini.project.financial_tracker.dto.request.TransactionRequest;
 import com.mini.project.financial_tracker.dto.response.DataResponse;
-import com.mini.project.financial_tracker.dto.response.MessageResponse;
 import com.mini.project.financial_tracker.dto.response.TransactionResponse;
 import com.mini.project.financial_tracker.dto.response.TransactionDetailResponse;
 import com.mini.project.financial_tracker.service.TransactionService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -29,7 +30,7 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<DataResponse<List<TransactionResponse>>> getAllTransactions() {
-        String username = com.mini.project.financial_tracker.utils.SecurityUtils.getCurrentUsername();
+        String username = com.mini.project.financial_tracker.util.helper.SecurityUtils.getCurrentUsername();
         List<TransactionResponse> response = transactionService.getAllTransactions(username);
         return ResponseEntity.ok(new DataResponse<>(200, "Transactions retrieved successfully", response));
     }
@@ -49,8 +50,8 @@ public class TransactionController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse<String>> deleteTransaction(@PathVariable UUID id) {
+    public ResponseEntity<HttpStatus> deleteTransaction(@PathVariable UUID id) {
         transactionService.deleteTransaction(id);
-        return ResponseEntity.ok(new MessageResponse<>(200, "Transaction deleted successfully"));
+        return ResponseEntity.noContent().build();
     }
 }

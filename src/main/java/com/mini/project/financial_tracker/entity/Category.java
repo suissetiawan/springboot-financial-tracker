@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.mini.project.financial_tracker.utils.enums.CategoryType;
+import com.mini.project.financial_tracker.util.enums.CategoryType;
 
 @Entity
 @Table(name = "categories")

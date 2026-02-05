@@ -6,7 +6,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.UUID;
 
-import com.mini.project.financial_tracker.utils.enums.Role;
+import com.mini.project.financial_tracker.util.enums.Role;
 
 @Data
 @Builder

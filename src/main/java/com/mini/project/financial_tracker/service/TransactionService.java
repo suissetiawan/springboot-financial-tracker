@@ -9,8 +9,8 @@ import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.repository.CategoryRepository;
 import com.mini.project.financial_tracker.repository.TransactionRepository;
 import com.mini.project.financial_tracker.repository.UserRepository;
-import com.mini.project.financial_tracker.utils.SecurityUtils;
-import com.mini.project.financial_tracker.utils.CacheConstants;
+import com.mini.project.financial_tracker.util.constant.CacheConstants;
+import com.mini.project.financial_tracker.util.helper.SecurityUtils;
 
 import org.springframework.cache.annotation.Cacheable;
 import lombok.RequiredArgsConstructor;
