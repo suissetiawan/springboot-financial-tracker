@@ -160,19 +160,21 @@ The project maintains high code coverage for core business logic and security co
 
 #### Coverage Overview
 
-| Component Group   | Coverage  | Items Tested                                                                  |
-| ----------------- | --------- | ----------------------------------------------------------------------------- |
-| **Services**      | 100%      | AuthService, TransactionService, CategoryService, SummaryService, UserService |
-| **Utilities**     | 98.2%     | JwtUtils, SecurityUtils, JwtAuthFilter                                        |
-| **Exceptions**    | 100%      | GlobalExceptionHandler, Custom Handlers, Custom Exceptions                    |
-| **Total Success** | **95/95** | All tests (Unit + Integration)                                                |
+| Component Group   | Coverage  | Items Tested                                                                                 |
+| ----------------- | --------- | -------------------------------------------------------------------------------------------- |
+| **Controllers**   | 100%      | AuthController, TransactionController, CategoryController, SummaryController, UserController |
+| **Services**      | 100%      | AuthService, TransactionService, CategoryService, SummaryService, UserService                |
+| **Utilities**     | 98.2%     | JwtUtils, SecurityUtils, JwtAuthFilter                                                       |
+| **Exceptions**    | 100%      | GlobalExceptionHandler, Custom Handlers, Custom Exceptions                                   |
+| **Total Success** | **95/95** | All tests (Unit + Integration)                                                               |
 
 #### Detailed Test Areas
 
+- **Controller Layer**: Unit tests using Mockito to verify correct service delegation, response status codes, and JSON structure for all API endpoints.
 - **Service Layer**: Complete validation of business rules, data persistence logic, and caching interactions.
-- **Security & JWT**: Comprehensive testing of token generation, validation, and security context management.
+- **Security & JWT**: Comprehensive testing of token generation, validation, and security filter logic.
 - **Error Handling**: Detailed verification of custom exceptions and global error response formatting.
-- **Integration**: End-to-end testing of Authentication flows, Transaction management, and Categories.
+- **Integration**: End-to-end testing of Authentication flows, Transaction management, and Categories in a real Spring context.
 
 ## Error Handling
 
