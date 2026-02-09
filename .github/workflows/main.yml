@@ -3,7 +3,7 @@ name: Build & Push Docker Image to Docker Hub
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   build-and-push:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
 
       - name: Build JAR with Maven
         run: mvn clean package -DskipTests
