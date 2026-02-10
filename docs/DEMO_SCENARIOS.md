@@ -1,164 +1,169 @@
 # Financial Tracker Demo Scenarios
 
-This document provides a step-by-step guide for demonstrating the Financial Tracker application. It covers both Admin flows (managing categories) and User journeys (financial transactions).
+This document provides a step-by-step guide for demonstrating the Financial Tracker application using the live demo URL:
+**[https://api-fintracker.suissetiawan.my.id/](https://api-fintracker.suissetiawan.my.id/)**
 
-## Preparation
-
-1.  Ensure **MySQL Database** is running.
-2.  Ensure **Redis Server** is running.
-3.  Start the Spring Boot application:
-    ```bash
-    ./mvnw spring-boot:run
-    ```
-4.  Prepare **Postman** or a similar tool for API testing.
+> ⚠️ **Note**: For these examples, we use `curl`. You can potential also use Postman or any other API client.
 
 ---
 
 ## Scenario 0: API Discovery
 
-_Goal: Show the root endpoint that provides API information._
+**Goal**: Check if the API is up and running.
 
-- **Endpoint**: `GET /`
-- **Result**: A welcome JSON response with a list of available API groups.
-- **Demo Point**: The API is discoverable and provides quick links to functionality.
+```bash
+curl -X GET https://api-fintracker.suissetiawan.my.id/
+```
 
----
-
-## Scenario 1: Admin Flow (Initial Setup)
-
-_Goal: Demonstrate Role-Based Access Control and Master Data Management._
-
-### 1. Admin Login
-
-- **Endpoint**: `POST /auth/login`
-- **Body**:
-  ```json
-  {
-    "username": "admin",
-    "password": "adminPassword"
-  }
-  ```
-- **Result**: Copy the **Access Token** from the response. Use this token for subsequent requests (Auth Type: Bearer Token).
-
-### 2. Create Categories (Redis Caching Demo)
-
-- **Endpoint**: `POST /api/categories`
-- **Header**: `Authorization: Bearer <ADMIN_TOKEN>`
-- **Body**:
-  ```json
-  {
-    "name": "Salary",
-    "type": "INCOME",
-    "description": "Monthly income"
-  }
-  ```
-- _Repeat for other categories_: "Food" (EXPENSE), "Transport" (EXPENSE).
-- **Demo Point**: Explain that categories are stored in the database and will be cached in Redis.
-
-### 3. View All Categories (Cache Hit)
-
-- **Endpoint**: `GET /api/categories`
-- **Header**: `Authorization: Bearer <ADMIN_TOKEN>`
-- **Action**:
-  1.  First request -> Data is fetched from DB (watch console logs).
-  2.  Second request -> Data is fetched from Redis (faster response).
-
-### 4. View Users (Admin Only)
-
-- **Endpoint**: `GET /api/users`
-- **Header**: `Authorization: Bearer <ADMIN_TOKEN>`
-- **Result**: Displays a list of all registered users.
+**Expected Result**: A JSON welcome message.
 
 ---
 
-## Scenario 2: User Journey (Core Features)
+## Scenario 1: User Registration & Login
 
-_Goal: Demonstrate the main application flow from a regular user's perspective._
+**Goal**: Create a new user and get an access token.
 
-### 1. Register New User
+### 1. Register
 
-- **Endpoint**: `POST /auth/register`
-- **Body**:
-  ```json
-  {
-    "username": "user_demo",
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "demo_user",
     "email": "demo@example.com",
     "password": "password123",
     "role": "USER"
-  }
-  ```
+  }'
+```
 
-### 2. User Login
+### 2. Login
 
-- **Endpoint**: `POST /auth/login`
-- **Body**: Use the new user's credentials.
-- **Result**: Copy the **Access Token** for the new user.
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "demo_user",
+    "password": "password123"
+  }'
+```
 
-### 3. Add Income
+**Action**: Copy the `accessToken` from the response. You will need it for the next steps.
 
-- **Endpoint**: `POST /api/transactions`
-- **Header**: `Authorization: Bearer <USER_TOKEN>`
-- **Body**:
-  ```json
-  {
-    "amount": 5000000,
-    "description": "January Salary",
-    "category": "Salary"
-  }
-  ```
-
-### 4. Add Expense
-
-- **Endpoint**: `POST /api/transactions`
-- **Header**: `Authorization: Bearer <USER_TOKEN>`
-- **Body**:
-  ```json
-  {
-    "amount": 50000,
-    "description": "Lunch",
-    "category": "Food"
-  }
-  ```
-
-### 5. View Summary
-
-- **Endpoint**: `GET /api/summary`
-- **Header**: `Authorization: Bearer <USER_TOKEN>`
-- **Result**:
-  - **Total Income**: 5,000,000
-  - **Total Expense**: 50,000
-  - **Balance**: 4,950,000
-- **Demo Point**: Shows automated balance calculation.
-
-### 6. Transaction History
-
-- **Endpoint**: `GET /api/transactions`
-- **Header**: `Authorization: Bearer <USER_TOKEN>`
-- **Result**: List of recently created transactions.
+```bash
+export TOKEN="YOUR_ACCESS_TOKEN_HERE"
+```
 
 ---
 
-## Scenario 3: Security & Error Handling
+## Scenario 2: Managing Finance (User Journey)
 
-_Goal: Show application robustness._
+**Goal**: Add income, expense, and check the balance.
 
-### 1. Access Without Token
+### 1. Add Income (Salary)
 
-- Attempt to access `GET /api/users` without Authorization header.
-- **Result**: `401 Unauthorized`.
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/api/transactions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000000,
+    "description": "Monthly Salary",
+    "category": "Salary",
+    "type": "INCOME"
+  }'
+```
 
-### 2. Forbidden Access
+### 2. Add Expense (Lunch)
 
-- Use a **Regular User Token** to access the Admin endpoint `GET /api/users`.
-- **Result**: `403 Forbidden` (Regular users cannot view the user list).
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/api/transactions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 50000,
+    "description": "Lunch at Warteg",
+    "category": "Food",
+    "type": "EXPENSE"
+  }'
+```
 
-### 3. Refresh Token
+### 3. Check Summary
 
-- **Endpoint**: `POST /auth/refresh`
-- **Body**:
-  ```json
-  {
-    "refreshToken": "<REFRESH_TOKEN_FROM_LOGIN>"
-  }
-  ```
-- **Result**: Obtain a new Access Token.
+```bash
+curl -X GET https://api-fintracker.suissetiawan.my.id/api/summary \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Result**: Should show **Total Income**: 5,000,000 | **Total Expense**: 50,000 | **Balance**: 4,950,000.
+
+---
+
+## Scenario 3: Admin Features (Optional)
+
+**Goal**: Demonstrate Admin-only features like managing categories.
+
+### 1. Admin Login (Default Admin)
+
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "adminPassword"
+  }'
+```
+
+**Action**: Copy the Admin Token.
+
+```bash
+export ADMIN_TOKEN="YOUR_ADMIN_TOKEN_HERE"
+```
+
+### 2. Create New Category
+
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/api/categories \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Investment",
+    "type": "EXPENSE",
+    "description": "Stocks and Bonds"
+  }'
+```
+
+### 3. View All Categories (Cached)
+
+```bash
+curl -X GET https://api-fintracker.suissetiawan.my.id/api/categories \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+---
+
+## Scenario 4: Error Handling
+
+**Goal**: Verify security and validation.
+
+### 1. Unauthorized Access
+
+Try to access summary without a token:
+
+```bash
+curl -X GET https://api-fintracker.suissetiawan.my.id/api/summary
+```
+
+**Result**: `401 Unauthorized`
+
+### 2. Wrong Password
+
+```bash
+curl -X POST https://api-fintracker.suissetiawan.my.id/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "demo_user",
+    "password": "wrongpassword"
+  }'
+```
+
+**Result**: `401 Unauthorized` or `400 Bad Request`.
