@@ -5,8 +5,8 @@ import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.UserRepository;
-import com.mini.project.financial_tracker.utils.SecurityUtils;
-import com.mini.project.financial_tracker.utils.enums.Role;
+import com.mini.project.financial_tracker.util.enums.Role;
+import com.mini.project.financial_tracker.util.helper.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;

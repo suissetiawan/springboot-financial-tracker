@@ -12,11 +12,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.mini.project.financial_tracker.utils.JwtAuthFilter;
 import com.mini.project.financial_tracker.exception.CustomAccessDeniedHandler;
 import com.mini.project.financial_tracker.exception.CustomAuthenticationEntryPoint;
 import com.mini.project.financial_tracker.repository.UserRepository;
-import com.mini.project.financial_tracker.utils.SecurityUtils;
+import com.mini.project.financial_tracker.util.helper.JwtAuthFilter;
+import com.mini.project.financial_tracker.util.helper.SecurityUtils;
+
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import lombok.AllArgsConstructor;
 
@@ -50,7 +51,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/login", "/auth/register").permitAll()
+                .requestMatchers("/auth/login", "/auth/register", "/auth/refresh", "/").permitAll()
                 .anyRequest().authenticated()
             ).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(exception -> exception

@@ -2,6 +2,8 @@
 
 A Spring Boot application for tracking personal finances (Income, Expenses, and Balance).
 
+> 🟢 **Live Demo**: [https://api-fintracker.suissetiawan.my.id/](https://api-fintracker.suissetiawan.my.id/)
+
 ## Features
 
 - **User Authentication**: Register, Login, Logout, Refresh Token (JWT).
@@ -13,152 +15,26 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 
 ## Tech Stack
 
-- **Java 25**
-- **Spring Boot 3**
-  - Spring Security (JWT)
-  - Spring Data JPA
-  - Spring Cache (Redis)
-  - Spring Web
+- **Java 21**
+- **Spring Boot 4**
 - **MySQL** (Database)
 - **Redis** (Caching & Token Storage)
 - **Lombok**
 
-## API Endpoints
+## Documentation
 
-### Authentication
+For detailed information, please refer to the following guides:
 
-- `POST /auth/register`: Register a new user.
-- `POST /auth/login`: Login to receive Access and Refresh tokens.
-- `POST /auth/refresh`: Refresh expired Access token.
-- `POST /auth/logout`: Logout and invalidate refresh token.
+- 🛠️ **[Setup & Installation Guide](docs/SETUP_GUIDE.md)**: Local development setup, database configuration, and testing.
+- 🚀 **[API Documentation](docs/API_DOCS.md)**: List of available endpoints and error handling.
+- 🚢 **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Production deployment guide for VPS using Docker & CI/CD.
+- 📊 **[Test Results](docs/TEST_RESULTS.md)**: Detailed test coverage and results summary.
+- 📝 **[Demo Scenarios](docs/DEMO_SCENARIOS.md)**: Detailed usecase descriptions.
 
-### Transactions
+## Quick Start
 
-- `POST /api/transactions`: Create a transaction.
-- `GET /api/transactions`: Get all transactions for the logged-in user (Redis Cache).
-- `GET /api/transactions/{id}`: Get a specific transaction.
-- `PUT /api/transactions/{id}`: Update a transaction.
-- `DELETE /api/transactions/{id}`: Delete a transaction.
-
-### Categories (User read only, managed by admin)
-
-- `GET /api/categories`: List all categories (Redis).
-- `POST /api/categories`: Create a new category.
-- `PUT /api/categories/{id}`: Update a category.
-- `DELETE /api/categories/{id}`: Delete a category.
-
-### Users (Admin Only)
-
-- `GET /api/users`: Get list of all users.
-- `GET /api/users/{id}`: Get details of a specific user (Admin or Self).
-
-### Summary
-
-- `GET /api/summary`: Get total income, total expense, and current balance (Redis).
-
-## Setup & Run
-
-### 1. Prerequisites
-
-- **Java 25** or higher
-- **MySQL** Database
-- **Redis** Server
-
-### 2. Database Setup
-
-Create a MySQL database (e.g., `financial_tracker`).
-
-```sql
-CREATE DATABASE financial_tracker;
-```
-
-### 3. Configuration
-
-Duplicate the example configuration file:
+If you have Docker installed, you can start the application quickly:
 
 ```bash
-cp src/main/resources/application.properties.example src/main/resources/application.properties
+docker compose up -d --build
 ```
-
-Open `src/main/resources/application.properties` and update the following values:
-
-- **Database Credentials**:
-
-  ```properties
-  spring.datasource.url=jdbc:mysql://localhost:3306/financial_tracker
-  spring.datasource.username=your_db_username
-  spring.datasource.password=your_db_password
-  ```
-
-- **JWT Secrets** (Use strong random strings):
-
-  ```properties
-  jwt.secret=your_super_secret_key_here
-  jwt.refresh.secret=your_super_secret_refresh_key_here
-  # Expiration time in seconds
-  jwt.expiration=1800
-  jwt.refresh.expiration=3600
-  ```
-
-- **Redis** (If running on a different host/port):
-  ```properties
-  spring.data.redis.host=localhost
-  spring.data.redis.port=6379
-  ```
-
-### 4. Run the Application
-
-```bash
-./mvnw spring-boot:run
-```
-
-The application will start on port `8080`.
-
-## Error Handling
-
-The API returns standard JSON error responses:
-
-```json
-{
-    "statusCode": 4xx/5xx,
-    "message": "Error description"
-}
-```
-
-- **401 Unauthorized**: Invalid or missing token / Login required.
-- **403 Forbidden**: Access denied.
-- **404 Not Found**: Resource not found (User, Transaction, Category).
-- **400 Bad Request**: Validation error
-- **500 Internal Server Error**: Server error.
-
-## Menjalankan dengan Docker
-
-Proyek ini sudah dilengkapi dengan konfigurasi Docker dan Docker Compose. Karena Anda menggunakan database dan Redis eksternal (container lain), pastikan layanan tersebut sudah berjalan.
-
-### Prasyarat
-
-- Docker Desktop atau Docker Engine
-- Docker Compose
-- Container MySQL & Redis yang sudah berjalan
-
-### Langkah-langkah
-
-1. Pastikan Anda berada di direktori root proyek.
-2. Sesuaikan variabel lingkungan (`DB_HOST`, `REDIS_HOST`, dll.) agar mengarah ke container eksternal Anda. Anda bisa mengaturnya di file `.env` atau langsung di `docker-compose.yml`.
-3. Jalankan perintah berikut:
-   ```bash
-   docker compose up -d --build
-   ```
-4. Aplikasi akan tersedia di `http://localhost:8080`.
-5. Untuk melihat log:
-   ```bash
-   docker compose logs -f app
-   ```
-6. Untuk menghentikan layanan:
-   ```bash
-   docker compose down
-   ```
-
-## Variabel Lingkungan
-
-Anda dapat menyesuaikan konfigurasi melalui file `.env` atau variabel lingkungan di `docker-compose.yml`.

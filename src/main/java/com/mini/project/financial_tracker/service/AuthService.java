@@ -11,9 +11,9 @@ import com.mini.project.financial_tracker.entity.User;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 import com.mini.project.financial_tracker.repository.UserRepository;
-import com.mini.project.financial_tracker.utils.JwtUtils;
-import com.mini.project.financial_tracker.utils.SecurityUtils;
-import com.mini.project.financial_tracker.utils.enums.Role;
+import com.mini.project.financial_tracker.util.enums.Role;
+import com.mini.project.financial_tracker.util.helper.JwtUtils;
+import com.mini.project.financial_tracker.util.helper.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +63,6 @@ public class AuthService {
 
         userRepository.save(user);
 
-        log.info("User registered successfully: {}", request.getEmail());
-
         return ResponseEntity.created(null)
                 .body(new MessageResponse<>(
                         HttpStatus.CREATED.value(), 
@@ -93,8 +91,7 @@ public class AuthService {
                         refreshToken
                 )
         );
-
-        log.info("User logged in successfully: {}", request.getEmail());
+        
         return ResponseEntity.ok(new DataResponse<>(
             HttpStatus.OK.value(), 
             "Login successful", 

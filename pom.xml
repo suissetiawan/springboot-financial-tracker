@@ -54,6 +54,11 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+				<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
 		
 		<!-- Security -->
 		<dependency>
@@ -86,7 +91,7 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
-		<!-- DevTools -->
+		<!-- DevTools & Config -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -113,6 +118,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>5.12.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -143,7 +154,40 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- JaCoCo: untuk generate coverage report -->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.12</version>
+				<executions>
+
+					<!-- attach JaCoCo agent sebelum test dijalankan -->
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+
+					<!-- generate report setelah test selesai -->
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<excludes>
+						<exclude>**/*com/mini/project/financial_tracker/config/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/dto/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/entity/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/util/constant/**</exclude>
+						<exclude>**/*com/mini/project/financial_tracker/util/enums/**</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
-
 </project>
