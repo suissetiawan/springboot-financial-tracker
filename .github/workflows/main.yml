@@ -72,20 +72,32 @@ jobs:
       # ====================================
       # DEPLOY TO VPS via Cloudflare Tunnel
       # ====================================
-      - name: Copy docker-compose.yml to server
+      - name: Setup SSH config for Cloudflare Tunnel
         run: |
-          # create dir if not exist
-          ssh -o StrictHostKeyChecking=no -o "ProxyCommand=cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}" ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p ${{ env.APP_DIR }}"
+          cat >> ~/.ssh/config << 'EOF'
+          Host vps-deploy
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/id_ed25519
+            StrictHostKeyChecking no
+            ProxyCommand cloudflared access ssh --hostname %h
+          EOF
 
-          # copy docker-compose (overwrite is expected)
-          scp -o StrictHostKeyChecking=no -o "ProxyCommand=cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}" docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
+      - name: Copy docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          proxy_use_insecure_cipher: true
+          proxy_command: cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}
+          source: "docker-compose.yml"
+          target: ${{ env.APP_DIR }}
+          overwrite: true
 
       - name: Deploy on VPS
         run: |
-          ssh \
-            -o StrictHostKeyChecking=no \
-            -o "ProxyCommand=cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}" \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh vps-deploy << 'EOF'
               set -e
               cd ${{ env.APP_DIR }}
 
