@@ -74,7 +74,7 @@ jobs:
       # ====================================
       - name: Setup SSH config for Cloudflare Tunnel
         run: |
-          cat >> ~/.ssh/config << 'EOF'
+          cat >> ~/.ssh/config << EOF
           Host vps-deploy
             HostName ${{ secrets.VPS_HOST }}
             User ${{ secrets.VPS_USER }}
