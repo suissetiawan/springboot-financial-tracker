@@ -74,6 +74,13 @@ jobs:
       # ====================================
       - name: Copy docker-compose.yml to server
         run: |
+          # create dir if not exist
+          ssh \
+            -o StrictHostKeyChecking=no \
+            -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}" \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p ${{ env.APP_DIR }}"
+          # copy docker-compose (overwrite is expected)
           scp \
             -o StrictHostKeyChecking=no \
             -o ProxyCommand="cloudflared access ssh --hostname ${{ secrets.SSH_HOST }}" \
