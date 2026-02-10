@@ -1,306 +1,233 @@
 # Deployment Guide
 
-This guide covers how to clone and run the Financial Tracker API locally, and how to deploy it to a VPS using DockerHub and GitHub Actions.
+This guide details how to deploy the **Financial Tracker API** to a production VPS using Docker and GitHub Actions.
+
+> 🟢 **Live Demo**: [https://api-fintracker.suissetiawan.my.id/](https://api-fintracker.suissetiawan.my.id/)
 
 ---
 
-## Quick Start (Local Development)
+## 📋 Table of Contents
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/suissetiawan/springboot-financial-tracker.git
-cd springboot-financial-tracker
-```
-
-### 2. Prerequisites
-
-Ensure you have the following installed:
-
-- **Java 21** or higher
-- **MySQL** Database
-- **Redis** Server
-- **Maven** (or use the included `./mvnw` wrapper)
-
-### 3. Configure Environment
-
-Update database and Redis credentials in:
-`src/main/resources/application-dev.properties`
-
-### 4. Create Database
-
-```sql
-CREATE DATABASE financial_tracker;
-```
-
-### 5. Run the Application
-
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-```
-
-The API will be available at `http://localhost:8080`.
-
-> For detailed setup instructions, see the **[Setup & Installation Guide](SETUP_GUIDE.md)**.
+1. [Prerequisites](#1-prerequisites)
+2. [Step 1: VPS Preparation](#step-1-vps-preparation)
+3. [Step 2: GitHub Repository Setup](#step-2-github-repository-setup)
+4. [Step 3: Server Configuration](#step-3-server-configuration)
+5. [Step 4: Continuous Deployment (CI/CD)](#step-4-continuous-deployment-cicd)
+6. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Production Deployment to VPS
+## 1. Prerequisites
 
-This section covers deploying the application to a VPS using Docker and automated CI/CD with GitHub Actions.
+Before starting, ensure you have:
 
-### Prerequisites
+- A **VPS** (e.g., DigitalOcean, AWS EC2, Linode) with Linux (Ubuntu 22.04 recommended).
+- A **Domain Name** pointed to your VPS IP (e.g., `api-fintracker.suissetiawan.my.id`).
+- **DockerHub Account** for storing container images.
+- Access to this **GitHub Repository**.
 
-On your VPS, ensure you have:
+---
 
-- **Docker** installed
-- **Docker Compose** installed
-- **MySQL** and **Redis** (can be run via Docker)
+## Step 1: VPS Preparation
 
-### Step 1: Prepare VPS Environment
+SSH into your VPS and set up the environment.
 
-#### 1.1 Install Docker and Docker Compose
+### 1.1 Install Docker & Docker Compose
 
 ```bash
+# Update and install helper tools
+sudo apt update && sudo apt install -y curl
+
 # Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
-# Install Docker Compose
-sudo apt-get update
-sudo apt-get install docker-compose-plugin
+# Verify installation
+docker --version
+docker compose version
 ```
 
-#### 1.2 Create Project Directory
+### 1.2 Create Project Directory
 
 ```bash
-mkdir -p ~/financial-tracker-api
-cd ~/financial-tracker-api
+mkdir -p ~/fintracker-api
+cd ~/fintracker-api
 ```
 
-### Step 2: Setup GitHub Secrets
+### 1.3 Create Docker Network
 
-For the GitHub Actions workflow to push images to DockerHub, configure these secrets in your GitHub repository:
-
-1. Go to **Settings** → **Secrets and variables** → **Actions**
-2. Add the following secrets:
-   - `DOCKERHUB_USERNAME`: Your DockerHub username
-   - `DOCKERHUB_TOKEN`: Your DockerHub access token
-
-### Step 3: Configure Environment on VPS
-
-Create a `.env` file on your VPS:
+Create a dedicated network for the application and its services to communicate:
 
 ```bash
-nano .env
+docker network create financial-tracker-network
 ```
 
-Add the following configuration:
+### 1.4 Install MySQL
 
-```env
-SPRING_PROFILES_ACTIVE=prod
-
-# Database Configuration
-DB_HOST=mysql
-DB_PORT=3306
-DB_NAME=financial_tracker
-DB_USER=your_db_user
-DB_PASSWORD=your_secure_password
-
-# Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
-
-# JWT Configuration
-JWT_SECRET=your_super_secret_jwt_key_min_256_bits
-JWT_REFRESH_SECRET=your_super_secret_refresh_key_min_256_bits
-JWT_EXPIRATION=3600
-JWT_REFRESH_EXPIRATION=86400
-```
-
-### Step 4: Create Docker Compose File
-
-Create a `docker-compose.yml` file on your VPS:
+Run the MySQL container manually. Ensure you replace the placeholders with your actual secure passwords.
 
 ```bash
-nano docker-compose.yml
+# Define your variables (or replace directly in the command)
+export DB_ROOT_PASSWORD=your_root_password
+export DB_NAME=financial_tracker
+export DB_USER=your_db_user
+export DB_PASSWORD=your_db_password
+
+# Run MySQL
+docker run -d \
+  --name financial-tracker-mysql \
+  --network financial-tracker-network \
+  -e MYSQL_ROOT_PASSWORD=$DB_ROOT_PASSWORD \
+  -e MYSQL_DATABASE=$DB_NAME \
+  -e MYSQL_USER=$DB_USER \
+  -e MYSQL_PASSWORD=$DB_PASSWORD \
+  -v mysql_data:/var/lib/mysql \
+  --restart always \
+  mysql:8.0
 ```
 
-Add the following content:
+### 1.5 Install Redis
 
-```yaml
-version: "3.8"
-
-services:
-  mysql:
-    image: mysql:8.0
-    container_name: financial-tracker-mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    networks:
-      - financial-tracker-network
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    container_name: financial-tracker-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - financial-tracker-network
-    restart: unless-stopped
-
-  app:
-    image: YOUR_DOCKERHUB_USERNAME/financial-tracker-be:latest
-    container_name: financial-tracker-app
-    env_file:
-      - .env
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-      - redis
-    networks:
-      - financial-tracker-network
-    restart: unless-stopped
-
-volumes:
-  mysql_data:
-
-networks:
-  financial-tracker-network:
-    driver: bridge
-```
-
-> **Important**: Replace `YOUR_DOCKERHUB_USERNAME` with your actual DockerHub username.
-
-### Step 5: Deploy the Application
-
-#### 5.1 Pull and Start Services
+Run the Redis container attached to the same network:
 
 ```bash
-docker compose pull
-docker compose up -d
+docker run -d \
+  --name financial-tracker-redis \
+  --network financial-tracker-network \
+  --restart always \
+  redis:7-alpine
 ```
 
-#### 5.2 Check Logs
+### 1.6 Generate SSH Keys for Deployment
 
-```bash
-# View all logs
-docker compose logs -f
+To allow GitHub Actions to SSH into your VPS, generating a dedicated SSH key pair is recommended.
 
-# View app logs only
-docker compose logs -f app
-```
+1.  **Generate the key pair** (run this on your local machine or VPS, but keep the private key safe):
 
-#### 5.3 Verify Deployment
+    ```bash
+    ssh-keygen -t ed25519 -C "deploy-fintracker-key" -f ./deploy_key
+    ```
 
-```bash
-curl http://localhost:8080
-```
+    This creates two files: `deploy_key` (Private) and `deploy_key.pub` (Public).
 
-You should see a JSON response with API information.
+2.  **Add Public Key to VPS**:
+    Copy the contents of `deploy_key.pub` and append it to `~/.ssh/authorized_keys` on your VPS.
 
-### Step 6: Update Deployment (After Code Changes)
+    ```bash
+    cat deploy_key.pub >> ~/.ssh/authorized_keys
+    ```
 
-When you push changes to the `main` branch, GitHub Actions will automatically:
-
-1. Build the application
-2. Create a Docker image
-3. Push it to DockerHub with the `latest` tag
-
-To update your VPS with the new image:
-
-```bash
-cd ~/financial-tracker
-docker compose pull app
-docker compose up -d app
-```
+3.  **Store Private Key**:
+    Copy the content of `deploy_key`. You will need this for the `VPS_SSH_KEY` secret in GitHub.
 
 ---
 
-## CI/CD Workflow Explanation
+## Step 2: GitHub Repository Setup
 
-The project uses GitHub Actions for automated builds and deployments.
+To enable automated deployments, configure these secrets in your GitHub repository:
 
-### Workflow File
+1.  Go to **Settings** > **Secrets and variables** > **Actions**.
+2.  Create the following **Repository Secrets**:
 
-Located at: `.github/workflows/main.yml`
+| Secret Name          | Description                                                                      |
+| :------------------- | :------------------------------------------------------------------------------- |
+| `DOCKERHUB_USERNAME` | Your DockerHub username.                                                         |
+| `DOCKERHUB_TOKEN`    | Your DockerHub Access Token (Create at DockerHub > Account Settings > Security). |
+| `VPS_HOST`           | Typically the IP address of your VPS.                                            |
+| `VPS_USER`           | The username to SSH into (e.g., `root` or `ubuntu`).                             |
+| `VPS_SSH_KEY`        | The **Private Key** content you generated in Step 1.3.                           |
 
-### Trigger
+---
 
-The workflow runs automatically on every push to the `main` branch.
+## Step 3: Server Configuration
 
-### Steps
+You only need to configure the environment variables once. The application code and Docker configuration will be deployed automatically.
 
-1. **Checkout Code**: Retrieves the latest code from the repository
-2. **Setup Java 21**: Configures the Java environment
-3. **Build JAR**: Compiles the application using Maven
-4. **Login to DockerHub**: Authenticates with DockerHub
-5. **Build & Push Image**: Creates a Docker image and pushes it to DockerHub
+### 3.1 Create Environment File
 
-### Manual Trigger
+Create a `.env` file in your project directory on the VPS:
 
-You can also manually trigger the workflow from the GitHub Actions tab.
+```bash
+cd ~/fintracker-api
+nano .env
+```
+
+Paste your production configuration:
+
+```env
+SPRING_PROFILES_ACTIVE=prod
+DOCKERHUB_USERNAME=<your-dockerhub-username>
+
+# Database
+DB_HOST=<your-db-host>
+DB_PORT=3306
+DB_NAME=financial_tracker
+DB_USER=<your-db-user>
+DB_PASSWORD=<your-db-password>
+
+# Redis
+REDIS_HOST=<your-redis-host>
+REDIS_PORT=6379
+
+# Security
+JWT_SECRET=YOUR_SUPER_SECURE_LONG_RANDOM_STRING_MIN_256_BITS
+JWT_REFRESH_SECRET=YOUR_OTHER_SUPER_SECURE_LONG_RANDOM_STRING
+JWT_EXPIRATION=3600
+JWT_REFRESH_EXPIRATION=86400
+
+# App Port
+APP_PORT=8080
+```
+
+> **Note**: You do **NOT** need to create `docker-compose.yml` manually. The CI/CD workflow will automatically copy the latest version from the repository to your server.
+
+---
+
+## Step 4: Continuous Deployment (CI/CD)
+
+The project includes a **GitHub Actions** workflow that handles the entire deployment process.
+
+### Automated Workflow
+
+Every time you push to the `main` branch, the following happens automatically:
+
+1.  **Build & Test**: Java code is compiled and tested.
+2.  **Docker Build**: A new Docker image is built and pushed to DockerHub.
+3.  **Deploy to VPS**:
+    - The workflow logs into your VPS using the SSH secrets.
+    - It copies the latest `docker-compose.yml` and `script/deploy.sh` (if applicable).
+    - It pulls the new image and restarts the services.
+
+### Manual Verification
+
+After a successful deployment, the service will start automatically. You can verify the status on your VPS:
+
+```bash
+cd ~/fintracker-api
+docker compose ps
+docker compose logs -f app
+```
 
 ---
 
 ## Troubleshooting
 
-### Application Won't Start
+### Database Connection Refused
 
-Check logs:
+- Ensure `mysql` container is running.
+- Check that `DB_HOST`, `DB_USER`, and `DB_PASSWORD` in your `.env` file are correct.
 
-```bash
-docker compose logs app
-```
+### App Crashes on Start
 
-Common issues:
+- Check logs: `docker compose logs app`
+- Verify `JWT_SECRET` is set and valid.
 
-- Database connection failed: Verify MySQL is running and credentials are correct
-- Redis connection failed: Verify Redis is running
-- Port already in use: Change the port mapping in `docker-compose.yml`
+### GitHub Action Fails on SSH
 
-### Database Migration Issues
-
-If you need to reset the database:
-
-```bash
-docker compose down
-docker volume rm financial-tracker_mysql_data
-docker compose up -d
-```
-
-### Update Not Reflecting
-
-Ensure you're pulling the latest image:
-
-```bash
-docker compose pull app
-docker compose up -d app --force-recreate
-```
+- Ensure `VPS_SSH_KEY` is the **private** key.
+- Ensure the corresponding **public** key is in `~/.ssh/authorized_keys` on the VPS.
+- Check that `VPS_USER` has permissions to write to `~/fintracker-api`.
 
 ---
 
-## Security Recommendations
-
-1. **Use Strong Secrets**: Generate secure random strings for JWT secrets
-2. **Firewall Configuration**: Only expose necessary ports (8080, 22)
-3. **HTTPS**: Use a reverse proxy (Nginx) with SSL/TLS certificates
-4. **Environment Variables**: Never commit `.env` files to version control
-5. **Database Backups**: Set up regular automated backups
-
----
-
-## Additional Resources
-
-- **[Setup & Installation Guide](SETUP_GUIDE.md)**: Detailed local development setup
-- **[API Documentation](API_DOCS.md)**: Complete API reference
-- **[Demo Scenarios](DEMO_SCENARIOS.md)**: Step-by-step usage examples
+> For local development instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.md)**.

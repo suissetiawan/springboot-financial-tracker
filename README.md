@@ -2,6 +2,8 @@
 
 A Spring Boot application for tracking personal finances (Income, Expenses, and Balance).
 
+> 🟢 **Live Demo**: [https://api-fintracker.suissetiawan.my.id/](https://api-fintracker.suissetiawan.my.id/)
+
 ## Features
 
 - **User Authentication**: Register, Login, Logout, Refresh Token (JWT).
@@ -23,9 +25,9 @@ A Spring Boot application for tracking personal finances (Income, Expenses, and 
 
 For detailed information, please refer to the following guides:
 
-- 🛠️ **[Setup & Installation Guide](docs/SETUP_GUIDE.md)**: How to get the project running locally or with Docker.
+- 🛠️ **[Setup & Installation Guide](docs/SETUP_GUIDE.md)**: Local development setup, database configuration, and testing.
 - 🚀 **[API Documentation](docs/API_DOCS.md)**: List of available endpoints and error handling.
-- 🚢 **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Clone, run locally, and deploy to VPS with DockerHub.
+- 🚢 **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Production deployment guide for VPS using Docker & CI/CD.
 - 📊 **[Test Results](docs/TEST_RESULTS.md)**: Detailed test coverage and results summary.
 - 📝 **[Demo Scenarios](docs/DEMO_SCENARIOS.md)**: Detailed usecase descriptions.
 

@@ -3,7 +3,7 @@ name: CI/CD - Build & Deploy (VPS)
 on:
   push:
     branches:
-      - develop
+      - main
 
 jobs:
   deploy:
