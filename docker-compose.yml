@@ -1,8 +1,8 @@
 services:
   app:
     build: .
-    image: fintracker-be:latest
-    container_name: fintracker
+    image: ${DOCKERHUB_USERNAME}/fintracker-api:latest
+    container_name: fintracker-api
     ports:
       - "8080:8080"
     env_file:
