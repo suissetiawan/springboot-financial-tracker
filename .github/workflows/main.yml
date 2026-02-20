@@ -3,7 +3,7 @@ name: CI/CD - Build & Deploy (VPS)
 on:
   push:
     branches:
-      - main
+      - develop
 
 jobs:
   deploy:
@@ -58,56 +58,32 @@ jobs:
           cache-to: type=inline
 
       # =========================
-      # SSH PREP (RUNNER SIDE)
+      # DEPLOY TO VPS
       # =========================
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ env.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-      - name: Fix DNS resolver
-        run: |
-          sudo rm -f /etc/resolv.conf
-          echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf
-
-      - name: Install cloudflared (runner only)
-        run: |
-          curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update
-          sudo apt-get install cloudflared
-
-      # ====================================
-      # DEPLOY TO VPS via Cloudflare Tunnel
-      # ====================================
-      - name: Setup SSH config for Cloudflare Tunnel
-        run: |
-          cat >> ~/.ssh/config << EOF
-          Host vps-deploy
-            HostName ${{ env.VPS_HOST }}
-            User ${{ env.VPS_USER }}
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking no
-            ProxyCommand cloudflared access ssh --hostname %h
-          EOF
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          api-key: ${{ secrets.TS_API_KEY }}
+          tailnet: ${{ secrets.TS_TAILNET }}
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ env.VPS_SSH_KEY }}
 
       - name: Create directory and copy docker-compose.yml
         run: |
-          # create dir if not exist
-          ssh vps-deploy "mkdir -p ${{ env.APP_DIR }}"
-
-          # copy docker-compose (overwrite is expected)
-          scp docker-compose.yml vps-deploy:${{ env.APP_DIR }}/docker-compose.yml
+          ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} "mkdir -p ${{ env.APP_DIR }}"
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ env.VPS_USER }}@${{ env.VPS_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
 
       - name: Deploy on VPS
         run: |
-          ssh vps-deploy << EOF
+          ssh -o StrictHostKeyChecking=no ${{ env.VPS_USER }}@${{ env.VPS_HOST }} << EOF
               set -e
               echo "🚀 Deploying to VPS Dir..."
               cd ${{ env.APP_DIR }}
 
               echo "📥 Pulling latest image..."
+              export DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
               docker compose pull
 
               echo "🔄 Restarting containers..."
