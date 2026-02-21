@@ -13,7 +13,8 @@ This guide details how to deploy the **Financial Tracker API** to a production V
 3. [Step 2: GitHub Repository Setup](#step-2-github-repository-setup)
 4. [Step 3: Server Configuration](#step-3-server-configuration)
 5. [Step 4: Continuous Deployment (CI/CD)](#step-4-continuous-deployment-cicd)
-6. [Troubleshooting](#troubleshooting)
+6. [Tailscale Private Network Setup](#tailscale-private-network-setup)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -207,6 +208,14 @@ cd ~/fintracker-api
 docker compose ps
 docker compose logs -f app
 ```
+
+---
+
+## Tailscale Private Network Setup
+
+This project uses **Tailscale** to secure the deployment process. The GitHub Actions runner connects to your private Tailnet to reach the VPS, meaning you don't need to expose SSH (port 22) to the public internet.
+
+For detailed instructions on setting up Tailscale, tagging, and OAuth for GitHub Actions, see the **[Tailscale Setup Guide](TAILSCALE_SETUP.md)**.
 
 ---
 

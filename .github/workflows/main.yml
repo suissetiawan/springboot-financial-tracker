@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   deploy:
@@ -11,11 +12,6 @@ jobs:
 
     env:
       IMAGE_NAME: fintracker-api
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_USER: ${{ secrets.VPS_USER }}
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       APP_DIR: /home/deploy/apps/fintracker-api
 
     steps:
@@ -43,8 +39,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
@@ -52,62 +48,40 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
 
       # =========================
-      # SSH PREP (RUNNER SIDE)
+      # DEPLOY TO VPS
       # =========================
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ env.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-action
 
-      - name: Fix DNS resolver
-        run: |
-          sudo rm -f /etc/resolv.conf
-          echo "nameserver 1.1.1.1" | sudo tee /etc/resolv.conf
-
-      - name: Install cloudflared (runner only)
-        run: |
-          curl -L https://pkg.cloudflare.com/cloudflare-main.gpg | sudo tee /usr/share/keyrings/cloudflare-main.gpg >/dev/null
-          echo "deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflared.list
-          sudo apt-get update
-          sudo apt-get install cloudflared
-
-      # ====================================
-      # DEPLOY TO VPS via Cloudflare Tunnel
-      # ====================================
-      - name: Setup SSH config for Cloudflare Tunnel
-        run: |
-          cat >> ~/.ssh/config << EOF
-          Host vps-deploy
-            HostName ${{ env.VPS_HOST }}
-            User ${{ env.VPS_USER }}
-            IdentityFile ~/.ssh/id_ed25519
-            StrictHostKeyChecking no
-            ProxyCommand cloudflared access ssh --hostname %h
-          EOF
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
       - name: Create directory and copy docker-compose.yml
         run: |
-          # create dir if not exist
-          ssh vps-deploy "mkdir -p ${{ env.APP_DIR }}"
-
-          # copy docker-compose (overwrite is expected)
-          scp docker-compose.yml vps-deploy:${{ env.APP_DIR }}/docker-compose.yml
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p ${{ env.APP_DIR }}"
+          scp -o StrictHostKeyChecking=no docker-compose.yml ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.APP_DIR }}/docker-compose.yml
 
       - name: Deploy on VPS
         run: |
-          ssh vps-deploy << EOF
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF > /dev/null 2>&1
               set -e
               echo "🚀 Deploying to VPS Dir..."
               cd ${{ env.APP_DIR }}
 
               echo "📥 Pulling latest image..."
+              export DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
               docker compose pull
 
               echo "🔄 Restarting containers..."
