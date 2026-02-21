@@ -65,7 +65,6 @@ jobs:
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
-          tailnet: ${{ secrets.TS_TAILNET }}
           tags: tag:github-action
 
       - name: Set up SSH
