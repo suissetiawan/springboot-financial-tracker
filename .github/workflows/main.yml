@@ -61,14 +61,15 @@ jobs:
       # DEPLOY TO VPS
       # =========================
       - name: Connect to Tailscale
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@v4
         with:
-          api-key: ${{ secrets.TS_API_KEY }}
-          tailnet: ${{ secrets.TS_TAILNET }}
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ env.VPS_SSH_KEY }}
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
 
       - name: Create directory and copy docker-compose.yml
         run: |
