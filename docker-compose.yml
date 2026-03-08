@@ -2,6 +2,10 @@ services:
   app:
     build: .
     image: ${DOCKERHUB_USERNAME}/fintracker-api:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fintracker.rule=Host(`fintracker.suissetiawan.my.id`)"
+      - "traefik.http.services.fintracker.loadbalancer.server.port=8080"
     container_name: fintracker-api
     ports:
       - "8082:8080"
