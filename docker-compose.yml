@@ -6,7 +6,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.fintracker.rule=Host(`fintracker.suissetiawan.my.id`)"
       - "traefik.http.services.fintracker.loadbalancer.server.port=8080"
-    container_name: fintracker-api
+    container_name: api-fintracker
     ports:
       - "8082:8080"
     env_file:
