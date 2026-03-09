@@ -4,17 +4,12 @@ services:
     image: ${DOCKERHUB_USERNAME}/fintracker-api:latest
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.fintracker.loadbalancer.server.port=8080"
 
-      # PUBLIC DOMAIN
-      - "traefik.http.routers.fin-public.rule=Host(`api.suissetiawan.my.id`) && PathPrefix(`/fintracker`)"
-      - "traefik.http.routers.fin-public.entrypoints=web"
-
-      # LOCAL DOMAIN
-      - "traefik.http.routers.fin-local.rule=Host(`api.suissetiawan.home`) && PathPrefix(`/fintracker`)"
-      - "traefik.http.routers.fin-local.entrypoints=web"
-
-      # SERVICE PORT
-      - "traefik.http.services.fin.loadbalancer.server.port=8080"
+      - "traefik.http.routers.fintracker-public.rule=Host(`api.suissetiawan.my.id`) && PathPrefix(`/fintracker`)"
+      - "traefik.http.routers.fintracker-public.entrypoints=web"
+      - "traefik.http.routers.fintracker-local.rule=Host(`api.suissetiawan.home`) && PathPrefix(`/fintracker`)"
+      - "traefik.http.routers.fintracker-local.entrypoints=web"
 
     container_name: api-fintracker
     ports:
