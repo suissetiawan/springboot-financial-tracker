@@ -6,12 +6,15 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import com.mini.project.financial_tracker.entity.User;
+
+
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.Claims;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 
 @Component
 public class JwtUtils {
@@ -21,7 +24,7 @@ public class JwtUtils {
     private SecretKey accessKey;
 
     @Value("${jwt.expiration}")
-    private int expiration;
+    private Duration expiration;
 
     @PostConstruct
     public void init() {
@@ -36,7 +39,7 @@ public class JwtUtils {
                 .setIssuer("auth-service")
                 .claim("role", user.getRole())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
                 .signWith(accessKey, SignatureAlgorithm.HS256)
                 .compact();
     }
