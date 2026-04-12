@@ -1,7 +1,6 @@
 package com.mini.project.financial_tracker.controller;
 
 import com.mini.project.financial_tracker.dto.request.LoginRequest;
-import com.mini.project.financial_tracker.dto.request.RefreshTokenRequest;
 import com.mini.project.financial_tracker.dto.request.RegisterRequest;
 import com.mini.project.financial_tracker.dto.response.AuthResponse;
 import com.mini.project.financial_tracker.dto.response.DataResponse;
@@ -44,7 +43,7 @@ public class AuthControllerTest {
     @Test
     void login_ShouldReturnResponse() {
         LoginRequest request = new LoginRequest();
-        AuthResponse authResponse = new AuthResponse("user-id", "access-token", "refresh-token");
+        AuthResponse authResponse = new AuthResponse("user-id", "access-token");
         DataResponse<AuthResponse> body = new DataResponse<>(200, "Login successful", authResponse);
         ResponseEntity<DataResponse<AuthResponse>> expected = ResponseEntity.ok(body);
         
@@ -57,29 +56,14 @@ public class AuthControllerTest {
         assertEquals("user-id", actual.getBody().getResponse().getUserId());
     }
 
-    @Test
-    void refreshToken_ShouldReturnResponse() {
-        RefreshTokenRequest request = new RefreshTokenRequest();
-        AuthResponse authResponse = new AuthResponse("user-id", "new-access-token", "new-refresh-token");
-        DataResponse<AuthResponse> body = new DataResponse<>(200, "Success Generate New Access Token", authResponse);
-        ResponseEntity<DataResponse<AuthResponse>> expected = ResponseEntity.ok(body);
-        
-        when(authService.refreshToken(any())).thenReturn(expected);
-        
-        ResponseEntity<DataResponse<AuthResponse>> actual = authController.refreshToken(request);
-        assertEquals(expected, actual);
-        assertEquals(200, actual.getBody().getStatus());
-        assertEquals("new-access-token", actual.getBody().getResponse().getAccessToken());
-    }
 
     @Test
     void logout_ShouldReturnResponse() {
-        RefreshTokenRequest request = new RefreshTokenRequest();
         ResponseEntity<MessageResponse<String>> expected = ResponseEntity.ok(new MessageResponse<>(200, "Success"));
         
-        when(authService.logout(any())).thenReturn(expected);
+        when(authService.logout()).thenReturn(expected);
         
-        ResponseEntity<MessageResponse<String>> actual = authController.logout(request);
+        ResponseEntity<MessageResponse<String>> actual = authController.logout();
         assertEquals(expected, actual);
     }
 }

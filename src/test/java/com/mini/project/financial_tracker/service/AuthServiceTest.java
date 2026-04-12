@@ -7,9 +7,7 @@ import com.mini.project.financial_tracker.dto.response.DataResponse;
 import com.mini.project.financial_tracker.dto.response.MessageResponse;
 import com.mini.project.financial_tracker.repository.UserRepository;
 import com.mini.project.financial_tracker.util.helper.JwtUtils;
-import com.mini.project.financial_tracker.util.helper.SecurityUtils;
 import com.mini.project.financial_tracker.entity.User;
-import com.mini.project.financial_tracker.entity.RefreshToken;
 import com.mini.project.financial_tracker.exception.BadRequestException;
 import com.mini.project.financial_tracker.exception.NotFoundException;
 
@@ -26,16 +24,11 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.mini.project.financial_tracker.repository.RefreshTokenRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
-import com.mini.project.financial_tracker.dto.request.RefreshTokenRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -58,8 +51,6 @@ public class AuthServiceTest {
     @Mock
     public JwtUtils jwtUtil;
 
-    @Mock
-    public RefreshTokenRepository refreshTokenRepository;
 
     @Mock
     public AuthenticationManager authenticationManager;
@@ -163,15 +154,8 @@ public class AuthServiceTest {
         existingUser.setEmail("test@example.com");
         existingUser.setPassword("encodedPassword");
 
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setJti("jti");
-        refreshToken.setUserId(existingUser.getId().toString());
-        refreshToken.setRefreshToken("refreshToken");
-
         when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(existingUser));
-        when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
         when(jwtUtil.generateAccessToken(existingUser)).thenReturn("jwtToken");
-        when(jwtUtil.generateRefreshToken(existingUser)).thenReturn("refreshToken");
 
         // Execute
         ResponseEntity<DataResponse<AuthResponse>> response = authService.login(reqMock);
@@ -181,200 +165,18 @@ public class AuthServiceTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(existingUser.getId().toString(), response.getBody().getResponse().getUserId());
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(refreshTokenRepository, times(1)).save(any());
         verify(userRepository, times(1)).findByEmail(any());
         verify(jwtUtil, times(1)).generateAccessToken(existingUser);
-        verify(jwtUtil, times(1)).generateRefreshToken(existingUser);
     }
 
     @Test
-    void logout_ShouldLogoutSuccessfully_WhenTokenIsValid() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        try (MockedStatic<SecurityUtils> mockedSecurityUtils = Mockito.mockStatic(SecurityUtils.class)) {
-            mockedSecurityUtils.when(SecurityUtils::getCurrentUsername).thenReturn("test@example.com");
-            when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-            when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-            when(refreshTokenRepository.findById("jti")).thenReturn(Optional.of(new RefreshToken()));
-
-            // Execute
-            ResponseEntity<MessageResponse<String>> response = authService.logout(reqMock);
-
-            // Verify
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals("Logout successful", response.getBody().getMessage());
-            verify(refreshTokenRepository, times(1)).deleteById("jti");
-        }
-    }
-
-    @Test
-    void logout_ShouldThrowBadRequest_WhenTokenIsInvalid() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("invalidRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("invalidRefreshToken")).thenReturn(false);
-
-        // Verify
-        assertThrows(BadRequestException.class, () -> {
-            authService.logout(reqMock);
-        });
-    }
-
-    @Test
-    void logout_ShouldThrowBadRequest_WhenUserNotLoggedIn() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        try (MockedStatic<SecurityUtils> mockedSecurityUtils = Mockito.mockStatic(SecurityUtils.class)) {
-            mockedSecurityUtils.when(SecurityUtils::getCurrentUsername).thenReturn(null);
-            when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-
-            // Verify
-            assertThrows(BadRequestException.class, () -> {
-                authService.logout(reqMock);
-            });
-        }
-    }
-
-    @Test
-    void logout_ShouldThrowBadRequest_WhenTokenNotFoundInRepo() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        try (MockedStatic<SecurityUtils> mockedSecurityUtils = Mockito.mockStatic(SecurityUtils.class)) {
-            mockedSecurityUtils.when(SecurityUtils::getCurrentUsername).thenReturn("test@example.com");
-            when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-            when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-            when(refreshTokenRepository.findById("jti")).thenReturn(Optional.empty());
-
-            // Verify
-            assertThrows(BadRequestException.class, () -> {
-                authService.logout(reqMock);
-            });
-        }
-    }
-
-    @Test
-    void refreshToken_ShouldReturnNewTokens_WhenValid() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        User user = new User();
-        UUID userId = UUID.randomUUID();
-        user.setId(userId);
-
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setJti("jti");
-        storedToken.setUserId(userId.toString());
-        storedToken.setRefreshToken("validRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-        when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-        when(jwtUtil.extractUserIdFromRefreshToken("validRefreshToken")).thenReturn(userId.toString());
-        when(refreshTokenRepository.findById("jti")).thenReturn(Optional.of(storedToken));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(jwtUtil.generateAccessToken(user)).thenReturn("newAccessToken");
-        when(jwtUtil.generateRefreshToken(user)).thenReturn("newRefreshToken");
-        when(jwtUtil.extractJtiFromRefreshToken("newRefreshToken")).thenReturn("newJti");
-
+    void logout_ShouldLogoutSuccessfully() {
         // Execute
-        ResponseEntity<DataResponse<AuthResponse>> response = authService.refreshToken(reqMock);
+        ResponseEntity<MessageResponse<String>> response = authService.logout();
 
         // Verify
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("newAccessToken", response.getBody().getResponse().getAccessToken());
-        verify(refreshTokenRepository, times(1)).deleteById("jti");
-        verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));
-    }
-
-    @Test
-    void refreshToken_ShouldThrowBadRequest_WhenTokenInvalid() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("invalidRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("invalidRefreshToken")).thenReturn(false);
-
-        // Verify
-        assertThrows(BadRequestException.class, () -> {
-            authService.refreshToken(reqMock);
-        });
-    }
-
-    @Test
-    void refreshToken_ShouldThrowNotFound_WhenTokenNotFoundInRepo() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-        when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-        when(refreshTokenRepository.findById("jti")).thenReturn(Optional.empty());
-
-        // Verify
-        assertThrows(NotFoundException.class, () -> {
-            authService.refreshToken(reqMock);
-        });
-    }
-
-    @Test
-    void refreshToken_ShouldThrowBadRequest_WhenUserIdMismatch() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setUserId("differentUserId");
-
-        when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-        when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-        when(jwtUtil.extractUserIdFromRefreshToken("validRefreshToken")).thenReturn("userId");
-        when(refreshTokenRepository.findById("jti")).thenReturn(Optional.of(storedToken));
-
-        // Verify
-        assertThrows(BadRequestException.class, () -> {
-            authService.refreshToken(reqMock);
-        });
-    }
-
-    @Test
-    void refreshToken_ShouldThrowBadRequest_WhenTokenMismatch() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setUserId("userId");
-        storedToken.setRefreshToken("differentRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-        when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-        when(jwtUtil.extractUserIdFromRefreshToken("validRefreshToken")).thenReturn("userId");
-        when(refreshTokenRepository.findById("jti")).thenReturn(Optional.of(storedToken));
-
-        // Verify
-        assertThrows(BadRequestException.class, () -> {
-            authService.refreshToken(reqMock);
-        });
-    }
-
-    @Test
-    void refreshToken_ShouldThrowNotFound_WhenUserNotFound() {
-        RefreshTokenRequest reqMock = new RefreshTokenRequest();
-        reqMock.setRefreshToken("validRefreshToken");
-
-        UUID userId = UUID.randomUUID();
-        RefreshToken storedToken = new RefreshToken();
-        storedToken.setUserId(userId.toString());
-        storedToken.setRefreshToken("validRefreshToken");
-
-        when(jwtUtil.validateRefreshToken("validRefreshToken")).thenReturn(true);
-        when(jwtUtil.extractJtiFromRefreshToken("validRefreshToken")).thenReturn("jti");
-        when(jwtUtil.extractUserIdFromRefreshToken("validRefreshToken")).thenReturn(userId.toString());
-        when(refreshTokenRepository.findById("jti")).thenReturn(Optional.of(storedToken));
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        // Verify
-        assertThrows(NotFoundException.class, () -> {
-            authService.refreshToken(reqMock);
-        });
+        assertEquals("Logout successful", response.getBody().getMessage());
     }
 }
 

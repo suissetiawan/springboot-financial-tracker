@@ -29,13 +29,8 @@ public class AuthController {
         return authService.login(request);
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<DataResponse<AuthResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
-        return authService.refreshToken(request);
-    }
-
     @PostMapping("/logout")
-    public ResponseEntity<MessageResponse<String>> logout(@RequestBody RefreshTokenRequest request) {
-        return authService.logout(request);
+    public ResponseEntity<MessageResponse<String>> logout() {
+        return authService.logout();
     }
 }

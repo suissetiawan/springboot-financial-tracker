@@ -20,15 +20,11 @@ class JwtUtilsTest {
     private JwtUtils jwtUtils;
     private User testUser;
     private final String secret = "de9a0f54130e7f095570c44968b2877def66cdd0cffd85f92450bb1f90e6eacb";
-    private final String refreshSecret = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-
     @BeforeEach
     void setUp() {
         jwtUtils = new JwtUtils();
         ReflectionTestUtils.setField(jwtUtils, "secret", secret);
-        ReflectionTestUtils.setField(jwtUtils, "refreshSecret", refreshSecret);
         ReflectionTestUtils.setField(jwtUtils, "expiration", 3600);
-        ReflectionTestUtils.setField(jwtUtils, "refreshExpiration", 86400);
         jwtUtils.init();
 
         testUser = new User();
@@ -45,14 +41,6 @@ class JwtUtilsTest {
         assertEquals(testUser.getId().toString(), jwtUtils.extractUserIdFromAccessToken(token));
     }
 
-    @Test
-    void generateAndValidateRefreshToken_ShouldSucceed() {
-        String token = jwtUtils.generateRefreshToken(testUser);
-        assertNotNull(token);
-        assertTrue(jwtUtils.validateRefreshToken(token));
-        assertEquals(testUser.getId().toString(), jwtUtils.extractUserIdFromRefreshToken(token));
-        assertNotNull(jwtUtils.extractJtiFromRefreshToken(token));
-    }
 
     @Test
     void validateAccessToken_WithWrongUser_ShouldReturnFalse() {
@@ -69,22 +57,12 @@ class JwtUtilsTest {
         assertFalse(jwtUtils.validateAccessToken(token, testUser));
     }
 
-    @Test
-    void validateRefreshToken_WithExpiredToken_ShouldReturnFalse() {
-        ReflectionTestUtils.setField(jwtUtils, "refreshExpiration", -10);
-        String token = jwtUtils.generateRefreshToken(testUser);
-        assertFalse(jwtUtils.validateRefreshToken(token));
-    }
 
     @Test
     void validateAccessToken_WithMalformedToken_ShouldReturnFalse() {
         assertFalse(jwtUtils.validateAccessToken("malformed-token", testUser));
     }
 
-    @Test
-    void validateRefreshToken_WithMalformedToken_ShouldReturnFalse() {
-        assertFalse(jwtUtils.validateRefreshToken("malformed-token"));
-    }
 
     @Test
     void validateAccessToken_WithNullUserId_ShouldReturnFalse() {
@@ -96,25 +74,12 @@ class JwtUtilsTest {
         assertFalse(jwtUtils.validateAccessToken(token, testUser));
     }
 
-    @Test
-    void validateRefreshToken_WithNullUserId_ShouldReturnFalse() {
-        SecretKey refreshKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
-        // Use a token with no subject
-        String token = Jwts.builder()
-                .signWith(refreshKey, SignatureAlgorithm.HS256)
-                .compact();
-        assertFalse(jwtUtils.validateRefreshToken(token));
-    }
 
     @Test
     void validateAccessToken_WithNullInput_ShouldReturnFalse() {
         assertFalse(jwtUtils.validateAccessToken(null, testUser));
     }
 
-    @Test
-    void validateRefreshToken_WithNullInput_ShouldReturnFalse() {
-        assertFalse(jwtUtils.validateRefreshToken(null));
-    }
 
     @Test
     void validateAccessToken_WithMismatchingUserId_ShouldReturnFalse() {

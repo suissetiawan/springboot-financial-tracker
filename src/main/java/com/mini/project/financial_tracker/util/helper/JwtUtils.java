@@ -20,20 +20,12 @@ public class JwtUtils {
     private String secret;
     private SecretKey accessKey;
 
-    @Value("${jwt.refresh.secret}")
-    private String refreshSecret;
-    private SecretKey refreshKey;
-
     @Value("${jwt.expiration}")
     private int expiration;
-
-    @Value("${jwt.refresh.expiration}")
-    private int refreshExpiration;
 
     @PostConstruct
     public void init() {
         this.accessKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.refreshKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateAccessToken(User user){
@@ -49,16 +41,6 @@ public class JwtUtils {
                 .compact();
     }
 
-    public String generateRefreshToken(User user){
-        return Jwts.builder()
-                .setId(UUID.randomUUID().toString()) // jti
-                .setSubject(user.getId().toString()) // sub
-                .setIssuer("auth-service")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration * 1000))
-                .signWith(refreshKey, SignatureAlgorithm.HS256)
-                .compact();
-    }
 
     // Claim All
     private Claims extractAccessToken(String token){
@@ -69,13 +51,6 @@ public class JwtUtils {
                 .getBody();
     }
 
-    private Claims extractRefreshToken(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(refreshKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
 
 
     // --------- ACCESS TOKEN ---------
@@ -96,25 +71,4 @@ public class JwtUtils {
         }
     }
 
-    // --------- REFRESH TOKEN ---------
-    public String extractUserIdFromRefreshToken(String token) {
-        return extractRefreshToken(token).getSubject();
-    }
-    
-    public String extractJtiFromRefreshToken(String token) {
-        return extractRefreshToken(token).getId();
-    }
-
-    private boolean isRefreshTokenExpired(String token) {
-        return extractRefreshToken(token).getExpiration().before(new Date());
-    }
-
-    public boolean validateRefreshToken(String token) {
-        try {
-            final String userId = extractUserIdFromRefreshToken(token);
-            return userId != null && !isRefreshTokenExpired(token);
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

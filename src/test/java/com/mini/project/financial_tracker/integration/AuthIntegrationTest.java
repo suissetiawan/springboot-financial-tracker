@@ -1,7 +1,6 @@
 package com.mini.project.financial_tracker.integration;
 
 import com.mini.project.financial_tracker.dto.request.LoginRequest;
-import com.mini.project.financial_tracker.dto.request.RefreshTokenRequest;
 import com.mini.project.financial_tracker.dto.request.RegisterRequest;
 import com.mini.project.financial_tracker.util.enums.Role;
 import org.junit.jupiter.api.Test;
@@ -42,34 +41,15 @@ class AuthIntegrationTest extends BaseIntegrationTest {
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.response.accessToken").exists())
-                .andExpect(jsonPath("$.response.refreshToken").exists())
                 .andReturn();
 
         String responseBody = loginResult.getResponse().getContentAsString();
         String accessToken = objectMapper.readTree(responseBody).get("response").get("accessToken").asString();
-        String refreshToken = objectMapper.readTree(responseBody).get("response").get("refreshToken").asString();
 
-        // 3. Refresh Token
-        RefreshTokenRequest refreshRequest = new RefreshTokenRequest();
-        refreshRequest.setRefreshToken(refreshToken);
-
-        MvcResult refreshResult = mockMvc.perform(post("/auth/refresh")
-                .header("Authorization", "Bearer " + accessToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.accessToken").exists())
-                .andReturn();
-
-        String refreshResponseBody = refreshResult.getResponse().getContentAsString();
-        String newRefreshToken = objectMapper.readTree(refreshResponseBody).get("response").get("refreshToken").asString();
-
-        // 4. Logout
-        refreshRequest.setRefreshToken(newRefreshToken);
+        // 3. Logout
         mockMvc.perform(post("/auth/logout")
                 .header("Authorization", "Bearer " + accessToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(refreshRequest)))
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
